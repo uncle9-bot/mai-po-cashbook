@@ -191,13 +191,13 @@
       border:1px solid var(--border-light);
     }
 
-    /* === Requirement: enlarge font size of all records in Transaction History === */
+    /* Requirement: enlarge font size of all records in Transaction History */
     #recordsTable{
       width:100%;
       min-width:700px;
       border-collapse:separate;
       border-spacing:0;
-      font-size:1.3em;  /* same size as the 'Transaction History' title */
+      font-size:1.3em; /* same as the title size */
       text-align:left;
       background-color:var(--card-background);
     }
@@ -236,7 +236,7 @@
       .container{ margin:0; border-radius:0; box-shadow:none; padding:15px; }
       .button-group{ flex-direction:column; gap:8px; }
       .button-group button{ padding:14px; }
-      #recordsTable{ min-width:650px; } /* still scrollable */
+      #recordsTable{ min-width:650px; }
       #recordsTable th, #recordsTable td{ padding:6px 5px; }
       #currentBalance{ font-size:28px; }
     }
@@ -346,7 +346,7 @@
 
   <div class="balance-info">
     Current Account Balance:
-    <div id="currentBalance">$00,000,000.00</div>
+    <div id="currentBalance"></div>
   </div>
 
   <div class="table-section">
@@ -373,10 +373,10 @@
 </div>
 
 <script>
-  // ===== Storage (keeps your data on the same GitHub Pages URL) =====
+  // ===== Storage =====
   const STORAGE_KEY = 'bookkeepingRecords';              // DO NOT CHANGE if you want to keep existing records
-  const REPAIR_KEY  = 'bookkeepingRecords_repaired_v2';  // internal flag to repair older formats once
-  let memoryFallbackRecords = []; // used only if localStorage is blocked
+  const REPAIR_KEY  = 'bookkeepingRecords_repaired_v3';  // internal flag to repair older formats once
+  let memoryFallbackRecords = [];
 
   function padSN(n){ return String(n).padStart(3,'0'); }
 
@@ -396,7 +396,7 @@
     document.getElementById('storageBanner').style.display = STORAGE_OK ? 'none' : 'block';
   }
 
-  // ===== IMPORTANT FIX: parse money safely (handles old "$" and commas too) =====
+  // ===== Parse money safely (handles old "$" and commas too) =====
   function parseMoney(val){
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return isFinite(val) ? val : 0;
@@ -405,30 +405,20 @@
     return isFinite(n) ? n : 0;
   }
 
-  // ===== Requirement: display money as $00,000,000.00 (2+3+3 digits) =====
-  function formatMoney(val){
-    const n = Number(parseMoney(val));
-    if (!isFinite(n)) return '$00,000,000.00';
+  // ===== Practical accounting format: $1,234,567.89 (2 decimals, thousand & million commas) =====
+  // Requirement: If amount is 0, show empty (including Balance)
+  function formatMoney(val, { blankZero = true } = {}){
+    const n = parseMoney(val);
+    if (!isFinite(n)) return blankZero ? '' : '$0.00';
+    if (blankZero && n === 0) return '';
 
     const sign = n < 0 ? '-' : '';
     const abs = Math.abs(n);
 
-    const fixed = abs.toFixed(2);
-    const parts = fixed.split('.');
-    const intRaw = parts[0];
-    const dec = parts[1] || '00';
-
-    // If > 8 digits integer part, fall back to normal comma formatting (still with $)
-    if (intRaw.length > 8) {
-      return `${sign}$${abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    }
-
-    const intStr = intRaw.padStart(8,'0'); // 8-digit integer part
-    const g1 = intStr.slice(0,2);
-    const g2 = intStr.slice(2,5);
-    const g3 = intStr.slice(5,8);
-
-    return `${sign}$${g1},${g2},${g3}.${dec}`;
+    return `${sign}$${abs.toLocaleString('en-US',{
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    })}`;
   }
 
   function getRecords(){
@@ -439,20 +429,17 @@
     }catch(e){
       records = memoryFallbackRecords;
     }
-
     if (!Array.isArray(records)) records = [];
     records.sort((a,b) => parseInt(a.serialNumber) - parseInt(b.serialNumber));
 
     // One-time repair: normalize old "$,comma" strings and recompute balances
     try{
       const repairedAlready = STORAGE_OK ? (localStorage.getItem(REPAIR_KEY) === '1') : false;
-      if (!repairedAlready && records.length > 0) {
+      if (!repairedAlready && records.length > 0){
         recalculateBalances(records, 0);
         if (STORAGE_OK) localStorage.setItem(REPAIR_KEY, '1');
       }
-    }catch(e){
-      // ignore
-    }
+    }catch(e){}
 
     return records;
   }
@@ -477,7 +464,7 @@
     }
   }
 
-  // ===== FIX: Money Out now correctly deducts balance =====
+  // ===== Fix: Money Out correctly deducts balance; store RAW numeric strings =====
   function recalculateBalances(records, startIndex = 0){
     if (!Array.isArray(records) || records.length === 0) return [];
 
@@ -493,10 +480,9 @@
 
       cumulativeBalance += (moneyIn - moneyOut);
 
-      // Store RAW numeric strings (no $ / commas) to avoid parseFloat bugs
-      r.moneyIn = moneyIn.toFixed(2);
-      r.moneyOut = moneyOut.toFixed(2);
-      r.balance = cumulativeBalance.toFixed(2);
+      r.moneyIn = moneyIn.toFixed(2);     // RAW
+      r.moneyOut = moneyOut.toFixed(2);   // RAW
+      r.balance = cumulativeBalance.toFixed(2); // RAW
     }
 
     saveRecords(records);
@@ -510,7 +496,7 @@
     document.getElementById('serialNumber').value = padSN(nextSN);
 
     const currentBalanceRaw = records.length > 0 ? parseMoney(records[records.length - 1].balance) : 0;
-    document.getElementById('currentBalance').textContent = formatMoney(currentBalanceRaw);
+    document.getElementById('currentBalance').textContent = formatMoney(currentBalanceRaw); // blank if 0
 
     const body = document.getElementById('recordsBody');
     body.innerHTML = '';
@@ -522,10 +508,10 @@
       row.insertCell().textContent = r.entryDate || '';
       row.insertCell().textContent = r.category || '';
       row.insertCell().textContent = r.description || '';
-      row.insertCell().textContent = formatMoney(r.moneyIn);
-      row.insertCell().textContent = formatMoney(r.moneyOut);
+      row.insertCell().textContent = formatMoney(r.moneyIn);   // blank if 0
+      row.insertCell().textContent = formatMoney(r.moneyOut);  // blank if 0
       row.insertCell().textContent = r.reimbursement || '';
-      row.insertCell().textContent = formatMoney(r.balance);
+      row.insertCell().textContent = formatMoney(r.balance);   // blank if 0 (your requirement)
       row.insertCell().textContent = r.remarks || '';
     });
   }
@@ -607,14 +593,13 @@
       entryDate: document.getElementById('entryDate').value,
       category: document.getElementById('category').value,
       description: document.getElementById('description').value,
-      moneyIn: moneyInValue.toFixed(2),   // RAW
-      moneyOut: moneyOutValue.toFixed(2), // RAW
+      moneyIn: moneyInValue.toFixed(2),
+      moneyOut: moneyOutValue.toFixed(2),
       reimbursement: document.getElementById('reimbursement').value,
       remarks: document.getElementById('remarks').value,
       balance: '0.00'
     };
 
-    // Prevent accidental duplicate serial number on new record
     if (amendIndex === -1 && records.some(r => r.serialNumber === newRecord.serialNumber)){
       alert(`Serial Number ${newRecord.serialNumber} already exists. Please use Amend.`);
       return;
@@ -637,7 +622,7 @@
     const updated = recalculateBalances(records, startingRecalcIndex);
     const saved = updated.find(r => r.serialNumber === newRecord.serialNumber);
     if (saved){
-      document.getElementById('balanceDisplay').value = formatMoney(saved.balance);
+      document.getElementById('balanceDisplay').value = formatMoney(saved.balance); // blank if 0
     }
 
     clearForm();
@@ -668,7 +653,7 @@
     document.getElementById('moneyOut').value = parseMoney(r.moneyOut) > 0 ? parseMoney(r.moneyOut).toFixed(2) : '';
     document.getElementById('reimbursement').value = r.reimbursement || '';
     document.getElementById('remarks').value = r.remarks || '';
-    document.getElementById('balanceDisplay').value = formatMoney(r.balance);
+    document.getElementById('balanceDisplay').value = formatMoney(r.balance); // blank if 0
 
     handleCategoryChange();
 
@@ -679,7 +664,7 @@
     alert(`Record S/N ${r.serialNumber} loaded for Amendment.`);
   }
 
-  // CSV export (Excel opens it). Export RAW numbers (no $ commas) for correctness.
+  // CSV export: export RAW numbers (no $ commas) for Excel and accounting
   function exportToExcel(){
     const records = getRecords();
     if (records.length === 0){
@@ -775,8 +760,7 @@
 
         recalculateBalances(cleaned, 0);
 
-        // Mark repaired so we don't redo repeatedly
-        try{ if (STORAGE_OK) localStorage.setItem(REPAIR_KEY, '1'); } catch(e){}
+        try{ if (STORAGE_OK) localStorage.setItem(REPAIR_KEY, '1'); }catch(e){}
 
         alert(`Restore complete: ${cleaned.length} record(s) loaded.`);
         clearForm();
