@@ -83,7 +83,7 @@
       font-size:15px;
     }
 
-    input[type="text"], input[type="date"], input[type="number"], select, textarea{
+    input[type="text"], input[type="date"], select, textarea{
       padding:12px 15px;
       border:1px solid var(--border-light);
       border-radius:10px;
@@ -100,6 +100,13 @@
       color:var(--disabled-text);
       cursor:not-allowed;
       border-color:var(--border-light);
+    }
+
+    /* Serial number box ALWAYS grey */
+    #serialNumber{
+      background-color:var(--disabled-background) !important;
+      border-color:var(--border-light) !important;
+      color:var(--text-dark) !important;
     }
 
     input[type="date"]{ line-height:normal; }
@@ -172,7 +179,7 @@
       margin-top:10px;
       letter-spacing:-.5px;
       text-shadow:0 1px 2px rgba(0,0,0,.1);
-      min-height:1.2em; /* keeps the box height even when blank */
+      min-height:1.2em;
     }
 
     .table-section{
@@ -184,7 +191,7 @@
     }
 
     .table-container{
-      max-height:300px;
+      max-height:320px;
       overflow-x:auto;
       overflow-y:auto;
       margin-top:15px;
@@ -192,22 +199,23 @@
       border:1px solid var(--border-light);
     }
 
-    /* Requirement: enlarge font size of all records in Transaction History */
+    /* No fixed widths; let content decide */
     #recordsTable{
       width:100%;
-      min-width:700px;
       border-collapse:separate;
       border-spacing:0;
       font-size:1.3em;
       text-align:left;
       background-color:var(--card-background);
+      table-layout:auto;
     }
 
     #recordsTable th, #recordsTable td{
-      padding:8px 6px;
+      padding:8px 8px;
       border-bottom:1px solid var(--border-light);
-      word-wrap:break-word;
       vertical-align:top;
+      white-space:normal;
+      word-break:break-word;
     }
 
     #recordsTable th{
@@ -223,22 +231,24 @@
     #recordsTable tbody tr:nth-child(even){ background-color:var(--background-light); }
     #recordsTable tbody tr:hover{ background-color:#E5F2FF; }
 
-    #recordsTable th:nth-child(1), #recordsTable td:nth-child(1){ width:5%; text-align:center; }
-    #recordsTable th:nth-child(2), #recordsTable td:nth-child(2){ width:10%; }
-    #recordsTable th:nth-child(3), #recordsTable td:nth-child(3){ width:10%; }
-    #recordsTable th:nth-child(4), #recordsTable td:nth-child(4){ width:20%; }
-    #recordsTable th:nth-child(5), #recordsTable td:nth-child(5){ width:10%; color:var(--success-green); font-weight:600; }
-    #recordsTable th:nth-child(6), #recordsTable td:nth-child(6){ width:10%; color:#d32f2f; font-weight:600; }
-    #recordsTable th:nth-child(7), #recordsTable td:nth-child(7){ width:15%; }
-    #recordsTable th:nth-child(8), #recordsTable td:nth-child(8){ width:10%; font-weight:700; }
-    #recordsTable th:nth-child(9), #recordsTable td:nth-child(9){ width:10%; }
+    /* Clamp cell content to 2 lines */
+    .clamp2{
+      display:-webkit-box;
+      -webkit-box-orient:vertical;
+      -webkit-line-clamp:2;
+      overflow:hidden;
+    }
+
+    .mono{
+      white-space:nowrap;
+      font-variant-numeric:tabular-nums;
+    }
 
     @media (max-width:600px){
       .container{ margin:0; border-radius:0; box-shadow:none; padding:15px; }
       .button-group{ flex-direction:column; gap:8px; }
       .button-group button{ padding:14px; }
-      #recordsTable{ min-width:650px; }
-      #recordsTable th, #recordsTable td{ padding:6px 5px; }
+      #recordsTable th, #recordsTable td{ padding:7px 7px; }
       #currentBalance{ font-size:28px; }
     }
   </style>
@@ -273,9 +283,9 @@
           <option value="">Select Category</option>
           <option value="Medical">🏥 Medical</option>
           <option value="Medicine">💊 Medicine</option>
-          <option value="Supplement">🍊 Supplement</option>
+          <option value="Supplement">🧃 Supplement</option>
           <option value="Home">🏠 Home</option>
-          <option value="Other">❓ Other</option>
+          <option value="Other">🟡 Other</option>
           <option value="Deposit">🏦 Deposit</option>
           <option value="Interest">💰 Interest</option>
           <option value="Time Deposit">⏳ Time Deposit</option>
@@ -287,36 +297,34 @@
         <textarea id="description" name="description" rows="2" required placeholder="e.g., Doctor visit, Grocery shopping"></textarea>
       </div>
 
+      <!-- CHANGED: type="text" so commas can appear while typing -->
       <div class="form-row">
         <label for="moneyIn">Money In:</label>
-        <input type="number" id="moneyIn" name="moneyIn" step="0.01" inputmode="decimal" placeholder="0.00" oninput="handleMoneyInput('in')">
+        <input type="text" id="moneyIn" name="moneyIn" inputmode="decimal" placeholder="0.00" autocomplete="off" autocapitalize="off" oninput="handleMoneyTyping('in')" onblur="normalizeMoneyOnBlur('in')">
       </div>
 
       <div class="form-row">
         <label for="moneyOut">Money Out:</label>
-        <input type="number" id="moneyOut" name="moneyOut" step="0.01" inputmode="decimal" placeholder="0.00" oninput="handleMoneyInput('out')">
+        <input type="text" id="moneyOut" name="moneyOut" inputmode="decimal" placeholder="0.00" autocomplete="off" autocapitalize="off" oninput="handleMoneyTyping('out')" onblur="normalizeMoneyOnBlur('out')">
       </div>
 
       <div class="form-row">
         <label for="reimbursement">Reimbursement (Person/Type):</label>
         <select id="reimbursement" name="reimbursement">
           <option value="">N/A</option>
-          <option value="Josephine">👤 Josephine</option>
-          <option value="Edward">👤 Edward</option>
-          <option value="Kathy">👤 Kathy</option>
-          <option value="Sylvia">👤 Sylvia</option>
-          <option value="Kelvin">👤 Kelvin</option>
-          <option value="Thomas">👤 Thomas</option>
-          <option value="Charles">👤 Charles</option>
-          <option value="Matthew">👤 Matthew</option>
+          <option value="Josephine">👩🏻 Josephine</option>
+          <option value="Edward">👱🏼‍♂️ Edward</option>
+          <option value="Kathy">👩🏻 Kathy</option>
+          <option value="Sylvia">👩🏻 Sylvia</option>
+          <option value="Kelvin">👱🏼‍♂️ Kelvin</option>
+          <option value="Thomas">👱🏼‍♂️ Thomas</option>
+          <option value="Charles">👱🏼‍♂️ Charles</option>
+          <option value="Matthew">👱🏼‍♂️ Matthew</option>
           <option value="Time Deposit">⏳ Time Deposit</option>
         </select>
       </div>
 
-      <div class="form-row">
-        <label for="balanceDisplay">Balance (Calculated on Save):</label>
-        <input type="text" id="balanceDisplay" value="---" readonly>
-      </div>
+      <!-- REMOVED: Balance field between Reimbursement and Remarks -->
 
       <div class="form-row">
         <label for="remarks">Remarks:</label>
@@ -372,8 +380,8 @@
 
 <script>
   // ===== Storage =====
-  const STORAGE_KEY = 'bookkeepingRecords';              // keep existing records
-  const REPAIR_KEY  = 'bookkeepingRecords_repaired_v4';  // repair older formats once
+  const STORAGE_KEY = 'bookkeepingRecords';               // keep existing records
+  const REPAIR_KEY  = 'bookkeepingRecords_repaired_v5';   // repair older formats once
   let memoryFallbackRecords = [];
 
   function padSN(n){ return String(n).padStart(3,'0'); }
@@ -403,25 +411,108 @@
     return isFinite(n) ? n : 0;
   }
 
-  // ===== Accounting display format: $1,234,567.89 (no leading zeros). If 0 -> show empty =====
+  // ===== Accounting display format: $1,234,567.89 ; if 0 -> blank =====
   function formatMoney(val){
     const n = parseMoney(val);
     if (!isFinite(n) || n === 0) return '';
-
     const sign = n < 0 ? '-' : '';
     const abs = Math.abs(n);
+    return `${sign}$${abs.toLocaleString('en-US',{ minimumFractionDigits:2, maximumFractionDigits:2 })}`;
+  }
 
-    return `${sign}$${abs.toLocaleString('en-US',{
-      minimumFractionDigits:2,
-      maximumFractionDigits:2
-    })}`;
+  // ===== Input formatting (commas while typing, no $; 2 decimals on blur) =====
+  function cleanNumericString(s){
+    // keep digits and one dot; keep leading '-' only at start
+    let str = String(s || '');
+    let neg = false;
+    if (str.trim().startsWith('-')) { neg = true; }
+    str = str.replace(/[^0-9.]/g, '');
+    const firstDot = str.indexOf('.');
+    if (firstDot !== -1){
+      str = str.slice(0, firstDot + 1) + str.slice(firstDot + 1).replace(/\./g, '');
+    }
+    return (neg ? '-' : '') + str;
+  }
+
+  function formatNumericForInput(cleaned){
+    // cleaned like "1234.5" or "1234" or ".5"
+    if (!cleaned || cleaned === '-' || cleaned === '.' || cleaned === '-.') return cleaned || '';
+
+    const neg = cleaned.startsWith('-');
+    const s = neg ? cleaned.slice(1) : cleaned;
+
+    const parts = s.split('.');
+    let intPart = parts[0] || '';
+    let decPart = parts[1] || '';
+
+    // limit decimals to 2 while typing
+    decPart = decPart.slice(0, 2);
+
+    // commas in integer part
+    // if user starts with ".5", keep it as "0.5" for clarity
+    if (intPart === '' && s.startsWith('.')) intPart = '0';
+
+    // remove leading zeros like "00012" -> "12", but keep single "0"
+    intPart = intPart.replace(/^0+(?=\d)/, '');
+
+    const intWithCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    const out = (parts.length > 1) ? `${intWithCommas}.${decPart}` : intWithCommas;
+    return (neg ? '-' : '') + out;
+  }
+
+  function countCleanChars(str){
+    // count digits and dot and minus at start
+    return String(str).replace(/[^0-9.-]/g,'').length;
+  }
+
+  function mapCaret(formatted, targetCount){
+    let count = 0;
+    for (let i = 0; i < formatted.length; i++){
+      const ch = formatted[i];
+      if (/[0-9.]/.test(ch) || (ch === '-' && i === 0)){
+        count++;
+        if (count >= targetCount) return i + 1;
+      }
+    }
+    return formatted.length;
+  }
+
+  function applyCommaFormatting(inputEl){
+    const prev = inputEl.value;
+    const caret = inputEl.selectionStart ?? prev.length;
+
+    const before = prev.slice(0, caret);
+    const cleanedBefore = cleanNumericString(before);
+    const targetCount = countCleanChars(cleanedBefore);
+
+    const cleanedAll = cleanNumericString(prev);
+    const formatted = formatNumericForInput(cleanedAll);
+
+    if (formatted !== prev){
+      inputEl.value = formatted;
+      const newPos = mapCaret(formatted, targetCount);
+      try { inputEl.setSelectionRange(newPos, newPos); } catch(e) {}
+    }
+  }
+
+  function normalizeTo2dpForInput(n){
+    if (!isFinite(n) || n === 0) return '';
+    const sign = n < 0 ? '-' : '';
+    const abs = Math.abs(n);
+    return sign + abs.toLocaleString('en-US',{ minimumFractionDigits:2, maximumFractionDigits:2 });
+  }
+
+  function normalizeMoneyOnBlur(which){
+    const el = (which === 'in') ? document.getElementById('moneyIn') : document.getElementById('moneyOut');
+    const n = parseMoney(el.value);
+    el.value = normalizeTo2dpForInput(n);
   }
 
   function getRecords(){
     let records = [];
     try{
-      if (STORAGE_OK) records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      else records = memoryFallbackRecords;
+      records = STORAGE_OK ? JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') : memoryFallbackRecords;
     }catch(e){
       records = memoryFallbackRecords;
     }
@@ -476,40 +567,13 @@
 
       cumulativeBalance += (moneyIn - moneyOut);
 
-      r.moneyIn = moneyIn.toFixed(2);     // RAW stored
-      r.moneyOut = moneyOut.toFixed(2);   // RAW stored
-      r.balance = cumulativeBalance.toFixed(2); // RAW stored
+      r.moneyIn = moneyIn.toFixed(2);
+      r.moneyOut = moneyOut.toFixed(2);
+      r.balance = cumulativeBalance.toFixed(2);
     }
 
     saveRecords(records);
     return records;
-  }
-
-  function updateUI(){
-    const records = getRecords();
-
-    const nextSN = records.length > 0 ? (parseInt(records[records.length - 1].serialNumber) + 1) : 1;
-    document.getElementById('serialNumber').value = padSN(nextSN);
-
-    const currentBalanceRaw = records.length > 0 ? parseMoney(records[records.length - 1].balance) : 0;
-    document.getElementById('currentBalance').textContent = formatMoney(currentBalanceRaw); // blank if 0
-
-    const body = document.getElementById('recordsBody');
-    body.innerHTML = '';
-    const reversed = [...records].reverse();
-
-    reversed.slice(0, 15).forEach(r => {
-      const row = body.insertRow();
-      row.insertCell().textContent = r.serialNumber || '';
-      row.insertCell().textContent = r.entryDate || '';
-      row.insertCell().textContent = r.category || '';
-      row.insertCell().textContent = r.description || '';
-      row.insertCell().textContent = formatMoney(r.moneyIn);   // blank if 0
-      row.insertCell().textContent = formatMoney(r.moneyOut);  // blank if 0
-      row.insertCell().textContent = r.reimbursement || '';
-      row.insertCell().textContent = formatMoney(r.balance);   // blank if 0
-      row.insertCell().textContent = r.remarks || '';
-    });
   }
 
   function setMoneyFieldsState(moneyInEnabled, moneyOutAndReimbursementEnabled){
@@ -518,27 +582,31 @@
     document.getElementById('reimbursement').disabled = !moneyOutAndReimbursementEnabled;
   }
 
-  function handleMoneyInput(changedField){
+  // On typing: apply commas + enforce the old mutual exclusivity rules
+  function handleMoneyTyping(changedField){
     const moneyIn = document.getElementById('moneyIn');
     const moneyOut = document.getElementById('moneyOut');
     const reimbursement = document.getElementById('reimbursement');
 
-    const inNum = parseMoney(moneyIn.value);
-    const outNum = parseMoney(moneyOut.value);
+    if (changedField === 'in') {
+      applyCommaFormatting(moneyIn);
+      const inVal = parseMoney(moneyIn.value);
 
-    if (changedField === 'in'){
-      if (inNum > 0){
+      if (moneyIn.value.trim() !== '' && inVal !== 0){
         moneyOut.value = '';
         reimbursement.value = '';
         setMoneyFieldsState(true, false);
-      }else{
+      } else {
         setMoneyFieldsState(true, true);
       }
-    } else if (changedField === 'out'){
-      if (outNum > 0){
+    } else {
+      applyCommaFormatting(moneyOut);
+      const outVal = parseMoney(moneyOut.value);
+
+      if (moneyOut.value.trim() !== '' && outVal !== 0){
         moneyIn.value = '';
         setMoneyFieldsState(false, true);
-      }else{
+      } else {
         setMoneyFieldsState(true, true);
       }
     }
@@ -559,11 +627,47 @@
 
   function clearForm(){
     document.getElementById('bookkeepingForm').reset();
-    document.getElementById('balanceDisplay').value = '---';
     document.getElementById('amendRecordIndex').value = '-1';
     document.getElementById('entryDate').valueAsDate = new Date();
     setMoneyFieldsState(true, true);
     handleCategoryChange();
+  }
+
+  function appendCell(row, text, { clamp = true, mono = false } = {}){
+    const td = row.insertCell();
+    const div = document.createElement('div');
+    if (clamp) div.classList.add('clamp2');
+    if (mono) div.classList.add('mono');
+    div.textContent = text ?? '';
+    td.appendChild(div);
+    return td;
+  }
+
+  function updateUI(){
+    const records = getRecords();
+
+    const nextSN = records.length > 0 ? (parseInt(records[records.length - 1].serialNumber) + 1) : 1;
+    document.getElementById('serialNumber').value = padSN(nextSN);
+
+    const currentBalanceRaw = records.length > 0 ? parseMoney(records[records.length - 1].balance) : 0;
+    document.getElementById('currentBalance').textContent = formatMoney(currentBalanceRaw);
+
+    const body = document.getElementById('recordsBody');
+    body.innerHTML = '';
+    const reversed = [...records].reverse();
+
+    reversed.slice(0, 15).forEach(r => {
+      const row = body.insertRow();
+      appendCell(row, r.serialNumber || '', { clamp:false, mono:true });
+      appendCell(row, r.entryDate || '', { clamp:false, mono:true });
+      appendCell(row, r.category || '');
+      appendCell(row, r.description || '');
+      appendCell(row, formatMoney(r.moneyIn), { clamp:false, mono:true });
+      appendCell(row, formatMoney(r.moneyOut), { clamp:false, mono:true });
+      appendCell(row, r.reimbursement || '');
+      appendCell(row, formatMoney(r.balance), { clamp:false, mono:true });
+      appendCell(row, r.remarks || '');
+    });
   }
 
   function saveRecord(){
@@ -575,9 +679,16 @@
 
     const moneyInValue = parseMoney(document.getElementById('moneyIn').value);
     const moneyOutValue = parseMoney(document.getElementById('moneyOut').value);
+    const reimbursementValue = document.getElementById('reimbursement').value;
 
     if (moneyInValue <= 0 && moneyOutValue <= 0){
       alert("Please enter a value (> 0) for either 'Money In' or 'Money Out'.");
+      return;
+    }
+
+    // NEW RULE: If Money Out is entered, Reimbursement must be selected
+    if (moneyOutValue > 0 && !reimbursementValue){
+      alert("For 'Money Out', please select a 'Reimbursement' person/type before saving.");
       return;
     }
 
@@ -591,7 +702,7 @@
       description: document.getElementById('description').value,
       moneyIn: moneyInValue.toFixed(2),
       moneyOut: moneyOutValue.toFixed(2),
-      reimbursement: document.getElementById('reimbursement').value,
+      reimbursement: reimbursementValue,
       remarks: document.getElementById('remarks').value,
       balance: '0.00'
     };
@@ -615,11 +726,7 @@
       alert(`New Record S/N ${newRecord.serialNumber} successfully saved!`);
     }
 
-    const updated = recalculateBalances(records, startingRecalcIndex);
-    const saved = updated.find(r => r.serialNumber === newRecord.serialNumber);
-    if (saved){
-      document.getElementById('balanceDisplay').value = formatMoney(saved.balance); // blank if 0
-    }
+    recalculateBalances(records, startingRecalcIndex);
 
     clearForm();
     updateUI();
@@ -645,11 +752,10 @@
     document.getElementById('entryDate').value = r.entryDate || '';
     document.getElementById('category').value = r.category || '';
     document.getElementById('description').value = r.description || '';
-    document.getElementById('moneyIn').value = parseMoney(r.moneyIn) > 0 ? parseMoney(r.moneyIn).toFixed(2) : '';
-    document.getElementById('moneyOut').value = parseMoney(r.moneyOut) > 0 ? parseMoney(r.moneyOut).toFixed(2) : '';
+    document.getElementById('moneyIn').value = normalizeTo2dpForInput(parseMoney(r.moneyIn));
+    document.getElementById('moneyOut').value = normalizeTo2dpForInput(parseMoney(r.moneyOut));
     document.getElementById('reimbursement').value = r.reimbursement || '';
     document.getElementById('remarks').value = r.remarks || '';
-    document.getElementById('balanceDisplay').value = formatMoney(r.balance); // blank if 0
 
     handleCategoryChange();
 
@@ -701,11 +807,7 @@
   // Backup & Restore (save JSON to Files / Google Drive)
   function backupJSON(){
     const records = getRecords();
-    const payload = {
-      app: "Mai Po Cashbook",
-      exportedAt: new Date().toISOString(),
-      records
-    };
+    const payload = { app:"Mai Po Cashbook", exportedAt:new Date().toISOString(), records };
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json;charset=utf-8;' });
 
