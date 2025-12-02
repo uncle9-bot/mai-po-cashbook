@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Mai Po Cashbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --primary-blue: #007AFF;
+        --dark-blue: #0056B3;
+        --success-green: #34C759;
+        --warning-orange: #FF9500;
+        --danger-red: #FF3B30;
+        --background-light: #F2F2F7;
+        --card-background: #FFFFFF;
+        --text-dark: #1C1C1E;
+        --text-medium: #8E8E93;
+        --border-light: #E5E5EA;
+        --gradient-start: #007AFF;
+        --gradient-end: #0056B3;
+        --disabled-background: #EFEFF4;
+        --disabled-text: #AEAEB2;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--background-light);
+        color: var(--text-dark);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        line-height: 1.6;
+    }
+
+    .container {
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 25px;
+        background-color: var(--card-background);
+        border-radius: 18px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+        box-sizing: border-box;
+    }
+
+    h2, h3 {
+        text-align: center;
+        color: var(--text-dark);
+        margin-bottom: 25px;
+        font-weight: 700;
+    }
+
+    .banner {
+        display: none;
+        margin: 0 0 18px 0;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(255, 59, 48, .10);
+        border: 1px solid rgba(255, 59, 48, .25);
+        color: var(--text-dark);
+        font-size: 13px;
+        line-height: 1.35;
+    }
+    .banner strong { color: var(--danger-red); }
+
+    .form-section {
+        background-color: var(--background-light);
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+
+    .form-row {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 18px;
+    }
+
+    label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--text-dark);
+        font-size: 15px;
+    }
+
+    input[type="text"], input[type="date"], input[type="number"], select, textarea {
+        padding: 12px 15px;
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        font-size: 16px;
+        color: var(--text-dark);
+        background-color: var(--card-background);
+        box-sizing: border-box;
+        -webkit-appearance: none;
+        transition: border-color .2s, box-shadow .2s, background-color .2s;
+    }
+
+    input:disabled, select:disabled, textarea:disabled {
+        background-color: var(--disabled-background);
+        color: var(--disabled-text);
+        cursor: not-allowed;
+        border-color: var(--border-light);
+    }
+
+    input[type="date"] { line-height: normal }
+
+    select {
+        height: 44px;
+        padding-right: 30px;
+        background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-6.5%200-12.3%203.2-16.1%208.1-3.9%204.9-3.9%2011.6%200%2016.5l128%20127.9c3.9%203.9%2011.6%203.9%2015.4%200l128-127.9c3.7-4.9%203.7-11.7%200-16.6z%22%2F%3E%3C%2Fsvg%3E');
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 12px
+    }
+
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--primary-blue);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, .2);
+        background-color: var(--card-background);
+    }
+
+    textarea { min-height: 80px; resize: vertical }
+
+    .button-group {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+        gap: 10px
+    }
+
+    .button-group button {
+        flex-grow: 1;
+        padding: 15px;
+        border: none;
+        border-radius: 12px;
+        font-size: 17px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color .2s, transform .1s, box-shadow .2s;
+        color: white;
+        background-image: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+        box-shadow: 0 4px 10px rgba(0, 122, 255, .2)
+    }
+    .button-group button:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 5px rgba(0, 122, 255, .2)
+    }
+
+    #saveButton { background-image: linear-gradient(135deg, #007AFF, #0056B3) }
+    #exportButton { background-image: linear-gradient(135deg, #34C759, #28A745); box-shadow: 0 4px 10px rgba(52, 199, 89, .2) }
+    #amendButton { background-image: linear-gradient(135deg, #FF9500, #CC7000); box-shadow: 0 4px 10px rgba(255, 149, 0, .2) }
+
+    #backupButton { background-image: linear-gradient(135deg, #AF52DE, #6F2DBD); box-shadow: 0 4px 10px rgba(175, 82, 222, .18) }
+    #restoreButton { background-image: linear-gradient(135deg, #5856D6, #2D2A9E); box-shadow: 0 4px 10px rgba(88, 86, 214, .18) }
+
+    .balance-info {
+        margin-top: 35px;
+        padding: 20px;
+        background-image: linear-gradient(135deg, #A2D2FF, #007AFF);
+        border-radius: 12px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 6px 15px rgba(0, 122, 255, .3)
+    }
+
+    #currentBalance {
+        font-size: 32px;
+        font-weight: 700;
+        margin-top: 10px;
+        letter-spacing: -.5px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, .1)
+    }
+
+    #currentBalance::before {
+        content: '$';
+        margin-right: 4px;
+        font-size: 24px;
+        vertical-align: middle
+    }
+
+    .table-section {
+        background-color: var(--card-background);
+        padding: 20px;
+        border-radius: 12px;
+        margin-top: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, .05)
+    }
+
+    .table-container {
+        max-height: 300px;
+        overflow-x: auto;
+        overflow-y: auto;
+        margin-top: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--border-light)
+    }
+
+    #recordsTable {
+        width: 100%;
+        min-width: 700px;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 10px;
+        text-align: left;
+        background-color: var(--card-background)
+    }
+
+    #recordsTable th, #recordsTable td {
+        padding: 8px 4px;
+        border-bottom: 1px solid var(--border-light);
+        word-wrap: break-word;
+        vertical-align: top
+    }
+
+    #recordsTable th {
+        background-color: var(--primary-blue);
+        color: white;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10
+    }
+
+    #recordsTable tbody tr:nth-child(even) { background-color: var(--background-light) }
+    #recordsTable tbody tr:hover { background-color: #E5F2FF }
+
+    #recordsTable th:nth-child(1), #recordsTable td:nth-child(1) { width: 5%; text-align: center }
+    #recordsTable th:nth-child(2), #recordsTable td:nth-child(2) { width: 10% }
+    #recordsTable th:nth-child(3), #recordsTable td:nth-child(3) { width: 10% }
+    #recordsTable th:nth-child(4), #recordsTable td:nth-child(4) { width: 20%; font-size: 9px }
+    #recordsTable th:nth-child(5), #recordsTable td:nth-child(5) { width: 10%; color: var(--success-green); font-weight: 500 }
+    #recordsTable th:nth-child(6), #recordsTable td:nth-child(6) { width: 10%; color: #d32f2f; font-weight: 500 }
+    #recordsTable th:nth-child(7), #recordsTable td:nth-child(7) { width: 15% }
+    #recordsTable th:nth-child(8), #recordsTable td:nth-child(8) { width: 10%; font-weight: 600 }
+    #recordsTable th:nth-child(9), #recordsTable td:nth-child(9) { width: 10%; font-size: 9px }
+
+    @media (max-width: 600px) {
+        .container { margin: 0; border-radius: 0; box-shadow: none; padding: 15px }
+        .button-group { flex-direction: column; gap: 8px }
+        .button-group button { padding: 14px }
+        #recordsTable { font-size: 10px; min-width: 650px }
+        #recordsTable th, #recordsTable td { padding: 6px 3px }
+        #currentBalance { font-size: 28px }
+        #currentBalance::before { font-size: 20px }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>✨ Mai Po Cashbook</h2>
+
+    <div id="storageBanner" class="banner">
+        <strong>Storage Warning:</strong> Your browser is not allowing saved storage (common on iPhone Private Browsing or when opening local files).
+        Records will not persist after closing. Use <strong>Backup JSON</strong> to save to iCloud/Google Drive, or open this app from an https website (e.g., GitHub Pages).
+    </div>
+
+    <div class="form-section">
+        <h3 style="margin-top:0;margin-bottom:20px;font-size:1.3em;">Entry Form 📝</h3>
+
+        <form id="bookkeepingForm">
+            <div class="form-row">
+                <label for="serialNumber">Serial Number:</label>
+                <input type="text" id="serialNumber" name="serialNumber" value="001" readonly>
+            </div>
+
+            <div class="form-row">
+                <label for="entryDate">Date:</label>
+                <input type="date" id="entryDate" name="entryDate" required>
+            </div>
+
+            <div class="form-row">
+                <label for="category">Category:</label>
+                <select id="category" name="category" required onchange="handleCategoryChange()">
+                    <option value="">Select Category</option>
+                    <option value="Medical">🏥 Medical</option>
+                    <option value="Medicine">💊 Medicine</option>
+                    <option value="Supplement">🍊 Supplement</option>
+                    <option value="Home">🏠 Home</option>
+                    <option value="Other">❓ Other</option>
+                    <option value="Deposit">🏦 Deposit</option>
+                    <option value="Interest">💰 Interest</option>
+                    <option value="Time Deposit">⏳ Time Deposit</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" rows="2" required placeholder="e.g., Doctor visit, Grocery shopping"></textarea>
+            </div>
+
+            <div class="form-row">
+                <label for="moneyIn">Money In:</label>
+                <input type="number" id="moneyIn" name="moneyIn" step="0.01" value="" placeholder="0.00" inputmode="decimal" oninput="handleMoneyInput('in')">
+            </div>
+
+            <div class="form-row">
+                <label for="moneyOut">Money Out:</label>
+                <input type="number" id="moneyOut" name="moneyOut" step="0.01" value="" placeholder="0.00" inputmode="decimal" oninput="handleMoneyInput('out')">
+            </div>
+
+            <div class="form-row">
+                <label for="reimbursement">Reimbursement (Person/Type):</label>
+                <select id="reimbursement" name="reimbursement">
+                    <option value="">N/A</option>
+                    <option value="Josephine">👤 Josephine</option>
+                    <option value="Edward">👤 Edward</option>
+                    <option value="Kathy">👤 Kathy</option>
+                    <option value="Sylvia">👤 Sylvia</option>
+                    <option value="Kelvin">👤 Kelvin</option>
+                    <option value="Thomas">👤 Thomas</option>
+                    <option value="Charles">👤 Charles</option>
+                    <option value="Matthew">👤 Matthew</option>
+                    <option value="Time Deposit">⏳ Time Deposit</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="balanceDisplay">Balance (Calculated on Save):</label>
+                <input type="text" id="balanceDisplay" value="---" readonly>
+            </div>
+
+            <div class="form-row">
+                <label for="remarks">Remarks:</label>
+                <textarea id="remarks" name="remarks" rows="2" placeholder="Any additional notes..."></textarea>
+            </div>
+
+            <div class="button-group">
+                <button type="button" id="amendButton" onclick="showAmendForm()">📝 Amend</button>
+                <button type="button" id="saveButton" onclick="saveRecord()">✅ Save Entry</button>
+                <button type="button" id="exportButton" onclick="exportToExcel()">📊 Export EXCEL</button>
+            </div>
+
+            <div class="button-group">
+                <button type="button" id="backupButton" onclick="backupJSON()">💾 Backup JSON</button>
+                <button type="button" id="restoreButton" onclick="restoreJSONPicker()">📥 Restore JSON</button>
+            </div>
+
+            <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importFromJsonFile(event)">
+            <input type="hidden" id="amendRecordIndex" value="-1">
+        </form>
+    </div>
+
+    <div class="balance-info">
+        Current Account Balance:
+        <div id="currentBalance">0.00</div>
+    </div>
+
+    <div class="table-section">
+        <h3 style="margin-top:0;margin-bottom:20px;font-size:1.3em;">Transaction History 📖</h3>
+        <div class="table-container">
+            <table id="recordsTable">
+                <thead>
+                <tr>
+                    <th>S/N</th>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Desc.</th>
+                    <th>In</th>
+                    <th>Out</th>
+                    <th>Reim.</th>
+                    <th>Balance</th>
+                    <th>Remarks</th>
+                </tr>
+                </thead>
+                <tbody id="recordsBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'bookkeepingRecords';
+    let memoryFallbackRecords = []; // used only if localStorage is blocked
+
+    function padSN(n) { return String(n).padStart(3, '0'); }
+    function money(v) { return (parseFloat(v) || 0).toFixed(2); }
+
+    function canUseLocalStorage() {
+        try {
+            const k = '__mp_cashbook_test__';
+            localStorage.setItem(k, '1');
+            localStorage.removeItem(k);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    const STORAGE_OK = canUseLocalStorage();
+
+    function showStorageBannerIfNeeded() {
+        const banner = document.getElementById('storageBanner');
+        banner.style.display = STORAGE_OK ? 'none' : 'block';
+    }
+
+    function getRecords() {
+        let records = [];
+        try {
+            if (STORAGE_OK) {
+                records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            } else {
+                records = memoryFallbackRecords;
+            }
+        } catch (e) {
+            // Corrupted JSON or blocked storage mid-run:
+            records = memoryFallbackRecords;
+        }
+
+        records.sort((a, b) => parseInt(a.serialNumber) - parseInt(b.serialNumber));
+        return records;
+    }
+
+    function saveRecords(records) {
+        records.sort((a, b) => parseInt(a.serialNumber) - parseInt(b.serialNumber));
+        if (STORAGE_OK) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                return true;
+            } catch (e) {
+                // If iPhone blocks storage (e.g., Private Browsing), fall back.
+                memoryFallbackRecords = records;
+                showStorageBannerIfNeeded();
+                alert("⚠️ iPhone storage is blocked (often Private Browsing). Your records are kept only for this session. Please use Backup JSON to save to Files/Drive.");
+                return false;
+            }
+        } else {
+            memoryFallbackRecords = records;
+            showStorageBannerIfNeeded();
+            return false;
+        }
+    }
+
+    function recalculateBalances(records, startIndex = 0) {
+        if (records.length === 0) return [];
+
+        let cumulativeBalance = 0;
+        if (startIndex > 0) cumulativeBalance = parseFloat(records[startIndex - 1].balance) || 0;
+
+        for (let i = startIndex; i < records.length; i++) {
+            const r = records[i];
+            const inV = parseFloat(r.moneyIn) || 0;
+            const outV = parseFloat(r.moneyOut) || 0;
+            cumulativeBalance += inV - outV;
+            r.balance = cumulativeBalance.toFixed(2);
+        }
+
+        saveRecords(records);
+        return records;
+    }
+
+    function updateUI() {
+        const records = getRecords();
+
+        const nextSN = records.length > 0 ? (parseInt(records[records.length - 1].serialNumber) + 1) : 1;
+        document.getElementById('serialNumber').value = padSN(nextSN);
+
+        const currentBalance = records.length > 0 ? (parseFloat(records[records.length - 1].balance) || 0) : 0;
+        document.getElementById('currentBalance').textContent = currentBalance.toFixed(2);
+
+        const body = document.getElementById('recordsBody');
+        body.innerHTML = '';
+        const reversed = [...records].reverse();
+
+        reversed.slice(0, 15).forEach(r => {
+            const row = body.insertRow();
+            row.insertCell().textContent = r.serialNumber;
+            row.insertCell().textContent = r.entryDate;
+            row.insertCell().textContent = r.category;
+            row.insertCell().textContent = r.description;
+            row.insertCell().textContent = money(r.moneyIn);
+            row.insertCell().textContent = money(r.moneyOut);
+            row.insertCell().textContent = r.reimbursement || '';
+            row.insertCell().textContent = money(r.balance);
+            row.insertCell().textContent = r.remarks || '';
+        });
+    }
+
+    function setMoneyFieldsState(moneyInEnabled, moneyOutAndReimbursementEnabled) {
+        const moneyIn = document.getElementById('moneyIn');
+        const moneyOut = document.getElementById('moneyOut');
+        const reimbursement = document.getElementById('reimbursement');
+
+        moneyIn.disabled = !moneyInEnabled;
+        moneyOut.disabled = !moneyOutAndReimbursementEnabled;
+        reimbursement.disabled = !moneyOutAndReimbursementEnabled;
+    }
+
+    // Improved: don't disable fields just because user typed "0"
+    function handleMoneyInput(changedField) {
+        const moneyIn = document.getElementById('moneyIn');
+        const moneyOut = document.getElementById('moneyOut');
+        const reimbursement = document.getElementById('reimbursement');
+
+        const inNum = parseFloat(moneyIn.value);
+        const outNum = parseFloat(moneyOut.value);
+
+        if (changedField === 'in') {
+            if (!isNaN(inNum) && inNum > 0) {
+                moneyOut.value = '';
+                reimbursement.value = '';
+                setMoneyFieldsState(true, false);
+            } else {
+                setMoneyFieldsState(true, true);
+            }
+        } else if (changedField === 'out') {
+            if (!isNaN(outNum) && outNum > 0) {
+                moneyIn.value = '';
+                setMoneyFieldsState(false, true);
+            } else {
+                setMoneyFieldsState(true, true);
+            }
+        }
+    }
+
+    function handleCategoryChange() {
+        const category = document.getElementById('category').value;
+        const description = document.getElementById('description');
+
+        if (category === 'Interest') {
+            description.value = 'Interest';
+            description.readOnly = true;
+        } else {
+            if (description.value === 'Interest' && description.readOnly) description.value = '';
+            description.readOnly = false;
+        }
+    }
+
+    function clearForm() {
+        document.getElementById('bookkeepingForm').reset();
+        document.getElementById('balanceDisplay').value = '---';
+        document.getElementById('amendRecordIndex').value = '-1';
+        document.getElementById('entryDate').valueAsDate = new Date();
+        setMoneyFieldsState(true, true);
+        handleCategoryChange();
+    }
+
+    function saveRecord() {
+        const form = document.getElementById('bookkeepingForm');
+        if (!form.checkValidity()) {
+            alert("Please fill in all required fields (Date, Category, Description).");
+            return;
+        }
+
+        const moneyInValue = parseFloat(document.getElementById('moneyIn').value) || 0;
+        const moneyOutValue = parseFloat(document.getElementById('moneyOut').value) || 0;
+
+        if (moneyInValue <= 0 && moneyOutValue <= 0) {
+            alert("Please enter a value (> 0) for either 'Money In' or 'Money Out'.");
+            return;
+        }
+
+        const records = getRecords();
+        const amendIndex = parseInt(document.getElementById('amendRecordIndex').value, 10);
+
+        const newRecord = {
+            serialNumber: document.getElementById('serialNumber').value,
+            entryDate: document.getElementById('entryDate').value,
+            category: document.getElementById('category').value,
+            description: document.getElementById('description').value,
+            moneyIn: moneyInValue.toFixed(2),
+            moneyOut: moneyOutValue.toFixed(2),
+            reimbursement: document.getElementById('reimbursement').value,
+            remarks: document.getElementById('remarks').value,
+            balance: '0.00'
+        };
+
+        // Prevent accidental duplicate S/N when storage fails or user imports weird data
+        if (amendIndex === -1 && records.some(r => r.serialNumber === newRecord.serialNumber)) {
+            alert(`Serial Number ${newRecord.serialNumber} already exists. Please use Amend.`);
+            return;
+        }
+
+        let startingRecalcIndex = 0;
+
+        if (amendIndex !== -1 && records[amendIndex]) {
+            records[amendIndex] = newRecord;
+            records.sort((a, b) => parseInt(a.serialNumber) - parseInt(b.serialNumber));
+            startingRecalcIndex = records.findIndex(r => r.serialNumber === newRecord.serialNumber);
+            alert(`Record S/N ${newRecord.serialNumber} successfully AMENDED and saved!`);
+        } else {
+            records.push(newRecord);
+            records.sort((a, b) => parseInt(a.serialNumber) - parseInt(b.serialNumber));
+            startingRecalcIndex = records.findIndex(r => r.serialNumber === newRecord.serialNumber);
+            alert(`New Record S/N ${newRecord.serialNumber} successfully saved!`);
+        }
+
+        const updated = recalculateBalances(records, startingRecalcIndex);
+        const savedRecord = updated.find(r => r.serialNumber === newRecord.serialNumber);
+        if (savedRecord) document.getElementById('balanceDisplay').value = money(savedRecord.balance);
+
+        clearForm();
+        updateUI();
+    }
+
+    function showAmendForm() {
+        const snToAmend = prompt("Enter the Serial Number (e.g., 005) of the record you wish to AMEND:");
+        if (!snToAmend) return;
+
+        const sn = snToAmend.trim().padStart(3, '0');
+        const records = getRecords();
+        const recordIndex = records.findIndex(r => r.serialNumber === sn);
+
+        if (recordIndex === -1) {
+            alert(`Record with Serial Number ${sn} not found.`);
+            return;
+        }
+
+        const record = records[recordIndex];
+
+        document.getElementById('amendRecordIndex').value = recordIndex;
+        document.getElementById('serialNumber').value = record.serialNumber;
+        document.getElementById('entryDate').value = record.entryDate;
+        document.getElementById('category').value = record.category;
+        document.getElementById('description').value = record.description;
+        document.getElementById('moneyIn').value = parseFloat(record.moneyIn) > 0 ? record.moneyIn : '';
+        document.getElementById('moneyOut').value = parseFloat(record.moneyOut) > 0 ? record.moneyOut : '';
+        document.getElementById('reimbursement').value = record.reimbursement || '';
+        document.getElementById('balanceDisplay').value = money(record.balance);
+        document.getElementById('remarks').value = record.remarks || '';
+        handleCategoryChange();
+
+        if (parseFloat(record.moneyIn) > 0) setMoneyFieldsState(true, false);
+        else if (parseFloat(record.moneyOut) > 0) setMoneyFieldsState(false, true);
+        else setMoneyFieldsState(true, true);
+
+        alert(`Record S/N ${record.serialNumber} loaded for Amendment.`);
+    }
+
+    // CSV export (Excel opens it fine). Safer emoji-strip for surrogate pairs.
+    function exportToExcel() {
+        const records = getRecords();
+        if (records.length === 0) {
+            alert("No records to export!");
+            return;
+        }
+
+        const stripEmojiPairs = (s) => (s || '').replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '');
+
+        const header = ["Serial Number", "Date", "Category", "Description", "Money In", "Money Out", "Reimbursement", "Balance", "Remarks"];
+        const csvRows = records.map(r => [
+            r.serialNumber,
+            r.entryDate,
+            stripEmojiPairs(r.category),
+            `"${String(r.description || '').replace(/"/g, '""')}"`,
+            r.moneyIn,
+            r.moneyOut,
+            stripEmojiPairs(r.reimbursement || ''),
+            r.balance,
+            `"${String(r.remarks || '').replace(/"/g, '""')}"`
+        ]);
+
+        const csvContent = [header.join(','), ...csvRows.map(e => e.join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+
+        const date = new Date().toISOString().slice(0, 10);
+        link.setAttribute("download", `MaiPoCashbook_Export_${date}.csv`);
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        alert("Data exported successfully! Check your downloads / Files app.");
+    }
+
+    // Backup & Restore (use this to save into Google Drive/iCloud manually)
+    function backupJSON() {
+        const records = getRecords();
+        const payload = {
+            app: "Mai Po Cashbook",
+            exportedAt: new Date().toISOString(),
+            records
+        };
+
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+
+        const date = new Date().toISOString().slice(0, 10);
+        link.setAttribute("download", `MaiPoCashbook_Backup_${date}.json`);
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        alert("Backup JSON created. Save it to iCloud Drive / Google Drive in the Files app.");
+    }
+
+    function restoreJSONPicker() {
+        document.getElementById('importFile').value = '';
+        document.getElementById('importFile').click();
+    }
+
+    function importFromJsonFile(event) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const obj = JSON.parse(reader.result);
+                const records = Array.isArray(obj) ? obj : (obj.records || []);
+                if (!Array.isArray(records)) throw new Error("Invalid backup format.");
+
+                // basic validation & normalize
+                const cleaned = records
+                    .filter(r => r && r.serialNumber && r.entryDate)
+                    .map(r => ({
+                        serialNumber: String(r.serialNumber).padStart(3, '0'),
+                        entryDate: r.entryDate,
+                        category: r.category || '',
+                        description: r.description || '',
+                        moneyIn: money(r.moneyIn),
+                        moneyOut: money(r.moneyOut),
+                        reimbursement: r.reimbursement || '',
+                        remarks: r.remarks || '',
+                        balance: '0.00'
+                    }))
+                    .sort((a, b) => parseInt(a.serialNumber) - parseInt(b.serialNumber));
+
+                recalculateBalances(cleaned, 0);
+                alert(`Restore complete: ${cleaned.length} record(s) loaded.`);
+                clearForm();
+                updateUI();
+            } catch (e) {
+                alert("Restore failed: " + (e.message || "Invalid JSON."));
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('entryDate').valueAsDate = new Date();
+        showStorageBannerIfNeeded();
+        updateUI();
+        setMoneyFieldsState(true, true);
+    });
+</script>
+</body>
+</html>
