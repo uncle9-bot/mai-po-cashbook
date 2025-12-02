@@ -172,6 +172,7 @@
       margin-top:10px;
       letter-spacing:-.5px;
       text-shadow:0 1px 2px rgba(0,0,0,.1);
+      min-height:1.2em; /* keeps the box height even when blank */
     }
 
     .table-section{
@@ -197,7 +198,7 @@
       min-width:700px;
       border-collapse:separate;
       border-spacing:0;
-      font-size:1.3em; /* same as the title size */
+      font-size:1.3em;
       text-align:left;
       background-color:var(--card-background);
     }
@@ -226,10 +227,10 @@
     #recordsTable th:nth-child(2), #recordsTable td:nth-child(2){ width:10%; }
     #recordsTable th:nth-child(3), #recordsTable td:nth-child(3){ width:10%; }
     #recordsTable th:nth-child(4), #recordsTable td:nth-child(4){ width:20%; }
-    #recordsTable th:nth-child(5), #recordsTable td:nth-child(5){ width:10%; color:var(--success-green); font-weight:500; }
-    #recordsTable th:nth-child(6), #recordsTable td:nth-child(6){ width:10%; color:#d32f2f; font-weight:500; }
+    #recordsTable th:nth-child(5), #recordsTable td:nth-child(5){ width:10%; color:var(--success-green); font-weight:600; }
+    #recordsTable th:nth-child(6), #recordsTable td:nth-child(6){ width:10%; color:#d32f2f; font-weight:600; }
     #recordsTable th:nth-child(7), #recordsTable td:nth-child(7){ width:15%; }
-    #recordsTable th:nth-child(8), #recordsTable td:nth-child(8){ width:10%; font-weight:600; }
+    #recordsTable th:nth-child(8), #recordsTable td:nth-child(8){ width:10%; font-weight:700; }
     #recordsTable th:nth-child(9), #recordsTable td:nth-child(9){ width:10%; }
 
     @media (max-width:600px){
@@ -322,19 +323,16 @@
         <textarea id="remarks" name="remarks" rows="2" placeholder="Any additional notes..."></textarea>
       </div>
 
-      <!-- Group 1: Save + Export -->
       <div class="button-group">
         <button type="button" id="saveButton" onclick="saveRecord()">✅ Save Entry</button>
         <button type="button" id="exportButton" onclick="exportToExcel()">📊 Export EXCEL</button>
       </div>
 
-      <!-- Group 2: Backup + Restore -->
       <div class="button-group">
         <button type="button" id="backupButton" onclick="backupJSON()">💾 Backup JSON</button>
         <button type="button" id="restoreButton" onclick="restoreJSONPicker()">📥 Restore JSON</button>
       </div>
 
-      <!-- Requirement: Amend button below Restore JSON -->
       <div class="button-group">
         <button type="button" id="amendButton" onclick="showAmendForm()">📝 Amend</button>
       </div>
@@ -374,8 +372,8 @@
 
 <script>
   // ===== Storage =====
-  const STORAGE_KEY = 'bookkeepingRecords';              // DO NOT CHANGE if you want to keep existing records
-  const REPAIR_KEY  = 'bookkeepingRecords_repaired_v3';  // internal flag to repair older formats once
+  const STORAGE_KEY = 'bookkeepingRecords';              // keep existing records
+  const REPAIR_KEY  = 'bookkeepingRecords_repaired_v4';  // repair older formats once
   let memoryFallbackRecords = [];
 
   function padSN(n){ return String(n).padStart(3,'0'); }
@@ -405,12 +403,10 @@
     return isFinite(n) ? n : 0;
   }
 
-  // ===== Practical accounting format: $1,234,567.89 (2 decimals, thousand & million commas) =====
-  // Requirement: If amount is 0, show empty (including Balance)
-  function formatMoney(val, { blankZero = true } = {}){
+  // ===== Accounting display format: $1,234,567.89 (no leading zeros). If 0 -> show empty =====
+  function formatMoney(val){
     const n = parseMoney(val);
-    if (!isFinite(n)) return blankZero ? '' : '$0.00';
-    if (blankZero && n === 0) return '';
+    if (!isFinite(n) || n === 0) return '';
 
     const sign = n < 0 ? '-' : '';
     const abs = Math.abs(n);
@@ -480,9 +476,9 @@
 
       cumulativeBalance += (moneyIn - moneyOut);
 
-      r.moneyIn = moneyIn.toFixed(2);     // RAW
-      r.moneyOut = moneyOut.toFixed(2);   // RAW
-      r.balance = cumulativeBalance.toFixed(2); // RAW
+      r.moneyIn = moneyIn.toFixed(2);     // RAW stored
+      r.moneyOut = moneyOut.toFixed(2);   // RAW stored
+      r.balance = cumulativeBalance.toFixed(2); // RAW stored
     }
 
     saveRecords(records);
@@ -511,7 +507,7 @@
       row.insertCell().textContent = formatMoney(r.moneyIn);   // blank if 0
       row.insertCell().textContent = formatMoney(r.moneyOut);  // blank if 0
       row.insertCell().textContent = r.reimbursement || '';
-      row.insertCell().textContent = formatMoney(r.balance);   // blank if 0 (your requirement)
+      row.insertCell().textContent = formatMoney(r.balance);   // blank if 0
       row.insertCell().textContent = r.remarks || '';
     });
   }
@@ -664,7 +660,7 @@
     alert(`Record S/N ${r.serialNumber} loaded for Amendment.`);
   }
 
-  // CSV export: export RAW numbers (no $ commas) for Excel and accounting
+  // CSV export: export RAW numbers (no $ commas)
   function exportToExcel(){
     const records = getRecords();
     if (records.length === 0){
