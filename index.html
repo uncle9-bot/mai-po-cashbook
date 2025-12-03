@@ -189,23 +189,28 @@
     }
 
     .table-container{
-      max-height:320px;
+      max-height:420px; /* a bit taller so scrolling feels easier */
       overflow-x:auto;
       overflow-y:auto;
       margin-top:15px;
       border-radius:8px;
       border:1px solid var(--border-light);
+
+      /* iPhone/safari: reliable scroll inside container */
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-x pan-y;
     }
 
     #recordsTable{
       width:100%;
-      min-width:1500px;      /* allow horizontal scroll on iPhone */
+      min-width:1500px;
       border-collapse:separate;
       border-spacing:0;
       font-size:1.3em;
       text-align:left;
       background-color:var(--card-background);
-      table-layout:fixed;     /* enforce the widths below */
+      table-layout:fixed;
     }
 
     #recordsTable th, #recordsTable td{
@@ -241,9 +246,7 @@
       font-variant-numeric:tabular-nums;
     }
 
-    /* === Requested Transaction History column widths ===
-       1 S/N, 2 Date, 3 Category, 4 Desc, 5 In, 6 Out, 7 Reim, 8 Balance, 9 Remarks
-    */
+    /* === Requested Transaction History column widths === */
     #recordsTable th:nth-child(1), #recordsTable td:nth-child(1){ width:80px;  }  /* S/N */
     #recordsTable th:nth-child(2), #recordsTable td:nth-child(2){ width:140px; }  /* Date */
     #recordsTable th:nth-child(3), #recordsTable td:nth-child(3){ width:130px; }  /* Category */
@@ -254,7 +257,6 @@
     #recordsTable th:nth-child(8), #recordsTable td:nth-child(8){ width:200px; }  /* Balance */
     #recordsTable th:nth-child(9), #recordsTable td:nth-child(9){ width:400px; }  /* Remarks */
 
-    /* keep these on one line */
     #recordsTable td:nth-child(1) .mono,
     #recordsTable td:nth-child(2) .mono,
     #recordsTable td:nth-child(5) .mono,
@@ -269,6 +271,7 @@
       .button-group button{ padding:14px; }
       #recordsTable th, #recordsTable td{ padding:7px 7px; }
       #currentBalance{ font-size:28px; }
+      .table-container{ max-height:55vh; } /* use screen height on iPhone */
     }
   </style>
 </head>
@@ -283,7 +286,7 @@
   </div>
 
   <div class="form-section">
-    <h3 style="margin-top:0;margin-bottom:20px;font-size:1.3em;">Entry Form 📝</h3>
+    <h3 style="margin-top:0;margin-bottom:20px;font-size:1.3em;"> Entry Form </h3>
 
     <form id="bookkeepingForm">
       <div class="form-row">
@@ -304,7 +307,7 @@
           <option value="Medicine">💊 Medicine</option>
           <option value="Supplement">🍊 Supplement</option>
           <option value="Home">🏠 Home</option>
-          <option value="Other">❓ Other</option>
+          <option value="Other">🟡 Other</option>
           <option value="Deposit">🏦 Deposit</option>
           <option value="Interest">💰 Interest</option>
           <option value="Time Deposit">⏳ Time Deposit</option>
@@ -334,10 +337,10 @@
         <label for="reimbursement">Reimbursement (Person/Type):</label>
         <select id="reimbursement" name="reimbursement">
           <option value="">N/A</option>
-          <option value="Josephine">👤 Josephine</option>
-          <option value="Edward">👤 Edward</option>
-          <option value="Kathy">👤 Kathy</option>
-          <option value="Sylvia">👤 Sylvia</option>
+          <option value="Josephine">👩🏻 Josephine</option>
+          <option value="Edward">👱🏼‍♂️ Edward</option>
+          <option value="Kathy">👩🏻 Kathy</option>
+          <option value="Sylvia">👩🏻 Sylvia</option>
           <option value="Kelvin">👤 Kelvin</option>
           <option value="Thomas">👤 Thomas</option>
           <option value="Charles">👤 Charles</option>
@@ -377,7 +380,7 @@
 
   <div class="table-section">
     <h3 style="margin-top:0;margin-bottom:20px;font-size:1.3em;">Transaction History 📖</h3>
-    <div class="table-container">
+    <div class="table-container" id="tableContainer">
       <table id="recordsTable">
         <thead>
         <tr>
@@ -647,9 +650,10 @@
 
     const body = document.getElementById('recordsBody');
     body.innerHTML = '';
-    const reversed = [...records].reverse();
 
-    reversed.slice(0, 15).forEach(r => {
+    /* ✅ SHOW ALL ROWS (no slice) so you can scroll to the oldest record */
+    const reversed = [...records].reverse();
+    for (const r of reversed){
       const row = body.insertRow();
       appendCell(row, r.serialNumber || '', { clamp:false, mono:true });
       appendCell(row, r.entryDate || '', { clamp:false, mono:true });
@@ -660,7 +664,7 @@
       appendCell(row, r.reimbursement || '');
       appendCell(row, formatMoney(r.balance), { clamp:false, mono:true });
       appendCell(row, r.remarks || '');
-    });
+    }
   }
 
   function saveRecord(){
@@ -679,7 +683,6 @@
       return;
     }
 
-    // if Money Out is entered, Reimbursement must be selected
     if (moneyOutValue > 0 && !reimbursementValue){
       alert("For 'Money Out', please select a 'Reimbursement' person/type before saving.");
       return;
@@ -869,5 +872,3 @@
 </script>
 </body>
 </html>
-
-
