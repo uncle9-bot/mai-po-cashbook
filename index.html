@@ -102,7 +102,6 @@
       border-color:var(--border-light);
     }
 
-    /* Serial number box ALWAYS grey */
     #serialNumber{
       background-color:var(--disabled-background) !important;
       border-color:var(--border-light) !important;
@@ -199,13 +198,13 @@
 
     #recordsTable{
       width:100%;
-      min-width:1200px;      /* allows horizontal scroll on iPhone */
+      min-width:1350px;      /* accommodate the wider columns below */
       border-collapse:separate;
       border-spacing:0;
       font-size:1.3em;
       text-align:left;
       background-color:var(--card-background);
-      table-layout:fixed;     /* needed so column widths below apply */
+      table-layout:fixed;    /* enforce the widths */
     }
 
     #recordsTable th, #recordsTable td{
@@ -229,7 +228,6 @@
     #recordsTable tbody tr:nth-child(even){ background-color:var(--background-light); }
     #recordsTable tbody tr:hover{ background-color:#E5F2FF; }
 
-    /* Clamp cell content to 2 lines */
     .clamp2{
       display:-webkit-box;
       -webkit-box-orient:vertical;
@@ -242,16 +240,18 @@
       font-variant-numeric:tabular-nums;
     }
 
-    /* === Your requested column widths ===
-       Column order: 1 S/N, 2 Date, 3 Category, 4 Desc, 5 In, 6 Out, 7 Reim, 8 Balance, 9 Remarks
+    /* === NEW requested Transaction History column widths ===
+       1 S/N, 2 Date, 3 Category, 4 Desc, 5 In, 6 Out, 7 Reim, 8 Balance, 9 Remarks
     */
-    #recordsTable th:nth-child(2), #recordsTable td:nth-child(2){ width:120px; }
-    #recordsTable th:nth-child(3), #recordsTable td:nth-child(3){ width:160px; }
-    #recordsTable th:nth-child(4), #recordsTable td:nth-child(4){ width:300px; }
-    #recordsTable th:nth-child(7), #recordsTable td:nth-child(7){ width:120px; }
-    #recordsTable th:nth-child(9), #recordsTable td:nth-child(9){ width:120px; }
+    #recordsTable th:nth-child(2), #recordsTable td:nth-child(2){ width:140px; } /* Date */
+    #recordsTable th:nth-child(3), #recordsTable td:nth-child(3){ width:160px; } /* Category */
+    #recordsTable th:nth-child(4), #recordsTable td:nth-child(4){ width:300px; } /* Description */
+    #recordsTable th:nth-child(5), #recordsTable td:nth-child(5){ width:140px; } /* In */
+    #recordsTable th:nth-child(6), #recordsTable td:nth-child(6){ width:140px; } /* Out */
+    #recordsTable th:nth-child(7), #recordsTable td:nth-child(7){ width:140px; } /* Reimbursement */
+    #recordsTable th:nth-child(9), #recordsTable td:nth-child(9){ width:200px; } /* Remarks */
 
-    /* (Optional but helpful) keep date and money in one line */
+    /* keep these on one line */
     #recordsTable td:nth-child(2) .mono,
     #recordsTable td:nth-child(5) .mono,
     #recordsTable td:nth-child(6) .mono,
@@ -271,7 +271,7 @@
 
 <body>
 <div class="container">
-  <h2>✨ Mai Po Cashbook</h2>
+  <h2>✨ Mai Po Cashbook ✨</h2>
 
   <div id="storageBanner" class="banner">
     <strong>Storage Warning:</strong> Your browser is not allowing saved storage (common on iPhone Private Browsing or when opening local files).
@@ -312,7 +312,6 @@
         <textarea id="description" name="description" rows="2" required placeholder="e.g., Doctor visit, Grocery shopping"></textarea>
       </div>
 
-      <!-- Text inputs so commas can appear while typing -->
       <div class="form-row">
         <label for="moneyIn">Money In:</label>
         <input type="text" id="moneyIn" name="moneyIn" inputmode="decimal" placeholder="0.00"
@@ -331,10 +330,10 @@
         <label for="reimbursement">Reimbursement (Person/Type):</label>
         <select id="reimbursement" name="reimbursement">
           <option value="">N/A</option>
-          <option value="Josephine">👤 Josephine</option>
-          <option value="Edward">👤 Edward</option>
-          <option value="Kathy">👤 Kathy</option>
-          <option value="Sylvia">👤 Sylvia</option>
+          <option value="Josephine">👩🏻 Josephine</option>
+          <option value="Edward">👱🏼‍♂️ Edward</option>
+          <option value="Kathy">👩🏻 Kathy</option>
+          <option value="Sylvia">👩🏻 Sylvia</option>
           <option value="Kelvin">👤 Kelvin</option>
           <option value="Thomas">👤 Thomas</option>
           <option value="Charles">👤 Charles</option>
@@ -342,8 +341,6 @@
           <option value="Time Deposit">⏳ Time Deposit</option>
         </select>
       </div>
-
-      <!-- Deleted: Balance field between Reimbursement and Remarks -->
 
       <div class="form-row">
         <label for="remarks">Remarks:</label>
@@ -399,7 +396,7 @@
 
 <script>
   const STORAGE_KEY = 'bookkeepingRecords';
-  const REPAIR_KEY  = 'bookkeepingRecords_repaired_v6';
+  const REPAIR_KEY  = 'bookkeepingRecords_repaired_v7';
   let memoryFallbackRecords = [];
 
   function padSN(n){ return String(n).padStart(3,'0'); }
@@ -428,7 +425,6 @@
     return isFinite(n) ? n : 0;
   }
 
-  // Display: $1,234,567.89 ; if 0 -> blank
   function formatMoney(val){
     const n = parseMoney(val);
     if (!isFinite(n) || n === 0) return '';
@@ -437,7 +433,6 @@
     return `${sign}$${abs.toLocaleString('en-US',{ minimumFractionDigits:2, maximumFractionDigits:2 })}`;
   }
 
-  // ===== Input formatting (commas while typing, no $; 2 decimals on blur) =====
   function cleanNumericString(s){
     let str = String(s || '');
     let neg = false;
@@ -452,7 +447,6 @@
 
   function formatNumericForInput(cleaned){
     if (!cleaned || cleaned === '-' || cleaned === '.' || cleaned === '-.') return cleaned || '';
-
     const neg = cleaned.startsWith('-');
     const s = neg ? cleaned.slice(1) : cleaned;
 
@@ -559,24 +553,18 @@
 
   function recalculateBalances(records, startIndex = 0){
     if (!Array.isArray(records) || records.length === 0) return [];
-
     let cumulativeBalance = 0;
-    if (startIndex > 0){
-      cumulativeBalance = parseMoney(records[startIndex - 1].balance);
-    }
+    if (startIndex > 0) cumulativeBalance = parseMoney(records[startIndex - 1].balance);
 
     for (let i = startIndex; i < records.length; i++){
       const r = records[i];
       const moneyIn = parseMoney(r.moneyIn);
       const moneyOut = parseMoney(r.moneyOut);
-
       cumulativeBalance += (moneyIn - moneyOut);
-
       r.moneyIn = moneyIn.toFixed(2);
       r.moneyOut = moneyOut.toFixed(2);
       r.balance = cumulativeBalance.toFixed(2);
     }
-
     saveRecords(records);
     return records;
   }
@@ -595,7 +583,6 @@
     if (changedField === 'in'){
       applyCommaFormatting(moneyIn);
       const inVal = parseMoney(moneyIn.value);
-
       if (moneyIn.value.trim() !== '' && inVal !== 0){
         moneyOut.value = '';
         reimbursement.value = '';
@@ -606,7 +593,6 @@
     } else {
       applyCommaFormatting(moneyOut);
       const outVal = parseMoney(moneyOut.value);
-
       if (moneyOut.value.trim() !== '' && outVal !== 0){
         moneyIn.value = '';
         setMoneyFieldsState(false, true);
@@ -619,7 +605,6 @@
   function handleCategoryChange(){
     const category = document.getElementById('category').value;
     const description = document.getElementById('description');
-
     if (category === 'Interest'){
       description.value = 'Interest';
       description.readOnly = true;
@@ -649,7 +634,6 @@
 
   function updateUI(){
     const records = getRecords();
-
     const nextSN = records.length > 0 ? (parseInt(records[records.length - 1].serialNumber) + 1) : 1;
     document.getElementById('serialNumber').value = padSN(nextSN);
 
@@ -690,7 +674,6 @@
       return;
     }
 
-    // Rule: if Money Out is entered, Reimbursement must be selected
     if (moneyOutValue > 0 && !reimbursementValue){
       alert("For 'Money Out', please select a 'Reimbursement' person/type before saving.");
       return;
