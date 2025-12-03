@@ -102,6 +102,7 @@
       border-color:var(--border-light);
     }
 
+    /* Serial number box ALWAYS grey */
     #serialNumber{
       background-color:var(--disabled-background) !important;
       border-color:var(--border-light) !important;
@@ -198,13 +199,13 @@
 
     #recordsTable{
       width:100%;
-      min-width:1350px;      /* accommodate the wider columns below */
+      min-width:1500px;      /* allow horizontal scroll on iPhone */
       border-collapse:separate;
       border-spacing:0;
       font-size:1.3em;
       text-align:left;
       background-color:var(--card-background);
-      table-layout:fixed;    /* enforce the widths */
+      table-layout:fixed;     /* enforce the widths below */
     }
 
     #recordsTable th, #recordsTable td{
@@ -240,18 +241,21 @@
       font-variant-numeric:tabular-nums;
     }
 
-    /* === NEW requested Transaction History column widths ===
+    /* === Requested Transaction History column widths ===
        1 S/N, 2 Date, 3 Category, 4 Desc, 5 In, 6 Out, 7 Reim, 8 Balance, 9 Remarks
     */
-    #recordsTable th:nth-child(2), #recordsTable td:nth-child(2){ width:140px; } /* Date */
-    #recordsTable th:nth-child(3), #recordsTable td:nth-child(3){ width:160px; } /* Category */
-    #recordsTable th:nth-child(4), #recordsTable td:nth-child(4){ width:300px; } /* Description */
-    #recordsTable th:nth-child(5), #recordsTable td:nth-child(5){ width:140px; } /* In */
-    #recordsTable th:nth-child(6), #recordsTable td:nth-child(6){ width:140px; } /* Out */
-    #recordsTable th:nth-child(7), #recordsTable td:nth-child(7){ width:140px; } /* Reimbursement */
-    #recordsTable th:nth-child(9), #recordsTable td:nth-child(9){ width:200px; } /* Remarks */
+    #recordsTable th:nth-child(1), #recordsTable td:nth-child(1){ width:80px;  }  /* S/N */
+    #recordsTable th:nth-child(2), #recordsTable td:nth-child(2){ width:140px; }  /* Date */
+    #recordsTable th:nth-child(3), #recordsTable td:nth-child(3){ width:130px; }  /* Category */
+    #recordsTable th:nth-child(4), #recordsTable td:nth-child(4){ width:300px; }  /* Description */
+    #recordsTable th:nth-child(5), #recordsTable td:nth-child(5){ width:140px; }  /* In */
+    #recordsTable th:nth-child(6), #recordsTable td:nth-child(6){ width:140px; }  /* Out */
+    #recordsTable th:nth-child(7), #recordsTable td:nth-child(7){ width:120px; }  /* Reimbursement */
+    #recordsTable th:nth-child(8), #recordsTable td:nth-child(8){ width:140px; }  /* Balance */
+    #recordsTable th:nth-child(9), #recordsTable td:nth-child(9){ width:260px; }  /* Remarks */
 
     /* keep these on one line */
+    #recordsTable td:nth-child(1) .mono,
     #recordsTable td:nth-child(2) .mono,
     #recordsTable td:nth-child(5) .mono,
     #recordsTable td:nth-child(6) .mono,
@@ -330,10 +334,10 @@
         <label for="reimbursement">Reimbursement (Person/Type):</label>
         <select id="reimbursement" name="reimbursement">
           <option value="">N/A</option>
-          <option value="Josephine">👩🏻 Josephine</option>
-          <option value="Edward">👱🏼‍♂️ Edward</option>
-          <option value="Kathy">👩🏻 Kathy</option>
-          <option value="Sylvia">👩🏻 Sylvia</option>
+          <option value="Josephine">👤 Josephine</option>
+          <option value="Edward">👤 Edward</option>
+          <option value="Kathy">👤 Kathy</option>
+          <option value="Sylvia">👤 Sylvia</option>
           <option value="Kelvin">👤 Kelvin</option>
           <option value="Thomas">👤 Thomas</option>
           <option value="Charles">👤 Charles</option>
@@ -433,6 +437,7 @@
     return `${sign}$${abs.toLocaleString('en-US',{ minimumFractionDigits:2, maximumFractionDigits:2 })}`;
   }
 
+  // ===== Input formatting (commas while typing, no $; 2 decimals on blur) =====
   function cleanNumericString(s){
     let str = String(s || '');
     let neg = false;
@@ -674,6 +679,7 @@
       return;
     }
 
+    // if Money Out is entered, Reimbursement must be selected
     if (moneyOutValue > 0 && !reimbursementValue){
       alert("For 'Money Out', please select a 'Reimbursement' person/type before saving.");
       return;
