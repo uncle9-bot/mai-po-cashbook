@@ -157,10 +157,8 @@
 
     #saveButton{ background-image:linear-gradient(135deg, #007AFF, #0056B3); }
     #exportButton{ background-image:linear-gradient(135deg, #34C759, #28A745); box-shadow:0 4px 10px rgba(52,199,89,.2); }
-
     #backupButton{ background-image:linear-gradient(135deg, #AF52DE, #6F2DBD); box-shadow:0 4px 10px rgba(175,82,222,.18); }
     #restoreButton{ background-image:linear-gradient(135deg, #5856D6, #2D2A9E); box-shadow:0 4px 10px rgba(88,86,214,.18); }
-
     #amendButton{ background-image:linear-gradient(135deg, #FF9500, #CC7000); box-shadow:0 4px 10px rgba(255,149,0,.2); }
 
     .balance-info{
@@ -199,15 +197,15 @@
       border:1px solid var(--border-light);
     }
 
-    /* No fixed widths; let content decide */
     #recordsTable{
       width:100%;
+      min-width:1200px;      /* allows horizontal scroll on iPhone */
       border-collapse:separate;
       border-spacing:0;
       font-size:1.3em;
       text-align:left;
       background-color:var(--card-background);
-      table-layout:auto;
+      table-layout:fixed;     /* needed so column widths below apply */
     }
 
     #recordsTable th, #recordsTable td{
@@ -242,6 +240,23 @@
     .mono{
       white-space:nowrap;
       font-variant-numeric:tabular-nums;
+    }
+
+    /* === Your requested column widths ===
+       Column order: 1 S/N, 2 Date, 3 Category, 4 Desc, 5 In, 6 Out, 7 Reim, 8 Balance, 9 Remarks
+    */
+    #recordsTable th:nth-child(2), #recordsTable td:nth-child(2){ width:120px; }
+    #recordsTable th:nth-child(3), #recordsTable td:nth-child(3){ width:160px; }
+    #recordsTable th:nth-child(4), #recordsTable td:nth-child(4){ width:300px; }
+    #recordsTable th:nth-child(7), #recordsTable td:nth-child(7){ width:120px; }
+    #recordsTable th:nth-child(9), #recordsTable td:nth-child(9){ width:120px; }
+
+    /* (Optional but helpful) keep date and money in one line */
+    #recordsTable td:nth-child(2) .mono,
+    #recordsTable td:nth-child(5) .mono,
+    #recordsTable td:nth-child(6) .mono,
+    #recordsTable td:nth-child(8) .mono{
+      white-space:nowrap;
     }
 
     @media (max-width:600px){
@@ -283,9 +298,9 @@
           <option value="">Select Category</option>
           <option value="Medical">🏥 Medical</option>
           <option value="Medicine">💊 Medicine</option>
-          <option value="Supplement">🧃 Supplement</option>
+          <option value="Supplement">🍊 Supplement</option>
           <option value="Home">🏠 Home</option>
-          <option value="Other">🟡 Other</option>
+          <option value="Other">❓ Other</option>
           <option value="Deposit">🏦 Deposit</option>
           <option value="Interest">💰 Interest</option>
           <option value="Time Deposit">⏳ Time Deposit</option>
@@ -297,34 +312,38 @@
         <textarea id="description" name="description" rows="2" required placeholder="e.g., Doctor visit, Grocery shopping"></textarea>
       </div>
 
-      <!-- CHANGED: type="text" so commas can appear while typing -->
+      <!-- Text inputs so commas can appear while typing -->
       <div class="form-row">
         <label for="moneyIn">Money In:</label>
-        <input type="text" id="moneyIn" name="moneyIn" inputmode="decimal" placeholder="0.00" autocomplete="off" autocapitalize="off" oninput="handleMoneyTyping('in')" onblur="normalizeMoneyOnBlur('in')">
+        <input type="text" id="moneyIn" name="moneyIn" inputmode="decimal" placeholder="0.00"
+               autocomplete="off" autocapitalize="off"
+               oninput="handleMoneyTyping('in')" onblur="normalizeMoneyOnBlur('in')">
       </div>
 
       <div class="form-row">
         <label for="moneyOut">Money Out:</label>
-        <input type="text" id="moneyOut" name="moneyOut" inputmode="decimal" placeholder="0.00" autocomplete="off" autocapitalize="off" oninput="handleMoneyTyping('out')" onblur="normalizeMoneyOnBlur('out')">
+        <input type="text" id="moneyOut" name="moneyOut" inputmode="decimal" placeholder="0.00"
+               autocomplete="off" autocapitalize="off"
+               oninput="handleMoneyTyping('out')" onblur="normalizeMoneyOnBlur('out')">
       </div>
 
       <div class="form-row">
         <label for="reimbursement">Reimbursement (Person/Type):</label>
         <select id="reimbursement" name="reimbursement">
           <option value="">N/A</option>
-          <option value="Josephine">👩🏻 Josephine</option>
-          <option value="Edward">👱🏼‍♂️ Edward</option>
-          <option value="Kathy">👩🏻 Kathy</option>
-          <option value="Sylvia">👩🏻 Sylvia</option>
-          <option value="Kelvin">👱🏼‍♂️ Kelvin</option>
-          <option value="Thomas">👱🏼‍♂️ Thomas</option>
-          <option value="Charles">👱🏼‍♂️ Charles</option>
-          <option value="Matthew">👱🏼‍♂️ Matthew</option>
+          <option value="Josephine">👤 Josephine</option>
+          <option value="Edward">👤 Edward</option>
+          <option value="Kathy">👤 Kathy</option>
+          <option value="Sylvia">👤 Sylvia</option>
+          <option value="Kelvin">👤 Kelvin</option>
+          <option value="Thomas">👤 Thomas</option>
+          <option value="Charles">👤 Charles</option>
+          <option value="Matthew">👤 Matthew</option>
           <option value="Time Deposit">⏳ Time Deposit</option>
         </select>
       </div>
 
-      <!-- REMOVED: Balance field between Reimbursement and Remarks -->
+      <!-- Deleted: Balance field between Reimbursement and Remarks -->
 
       <div class="form-row">
         <label for="remarks">Remarks:</label>
@@ -379,9 +398,8 @@
 </div>
 
 <script>
-  // ===== Storage =====
-  const STORAGE_KEY = 'bookkeepingRecords';               // keep existing records
-  const REPAIR_KEY  = 'bookkeepingRecords_repaired_v5';   // repair older formats once
+  const STORAGE_KEY = 'bookkeepingRecords';
+  const REPAIR_KEY  = 'bookkeepingRecords_repaired_v6';
   let memoryFallbackRecords = [];
 
   function padSN(n){ return String(n).padStart(3,'0'); }
@@ -402,7 +420,6 @@
     document.getElementById('storageBanner').style.display = STORAGE_OK ? 'none' : 'block';
   }
 
-  // ===== Parse money safely (handles old "$" and commas too) =====
   function parseMoney(val){
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return isFinite(val) ? val : 0;
@@ -411,7 +428,7 @@
     return isFinite(n) ? n : 0;
   }
 
-  // ===== Accounting display format: $1,234,567.89 ; if 0 -> blank =====
+  // Display: $1,234,567.89 ; if 0 -> blank
   function formatMoney(val){
     const n = parseMoney(val);
     if (!isFinite(n) || n === 0) return '';
@@ -422,10 +439,9 @@
 
   // ===== Input formatting (commas while typing, no $; 2 decimals on blur) =====
   function cleanNumericString(s){
-    // keep digits and one dot; keep leading '-' only at start
     let str = String(s || '');
     let neg = false;
-    if (str.trim().startsWith('-')) { neg = true; }
+    if (str.trim().startsWith('-')) neg = true;
     str = str.replace(/[^0-9.]/g, '');
     const firstDot = str.indexOf('.');
     if (firstDot !== -1){
@@ -435,7 +451,6 @@
   }
 
   function formatNumericForInput(cleaned){
-    // cleaned like "1234.5" or "1234" or ".5"
     if (!cleaned || cleaned === '-' || cleaned === '.' || cleaned === '-.') return cleaned || '';
 
     const neg = cleaned.startsWith('-');
@@ -445,24 +460,17 @@
     let intPart = parts[0] || '';
     let decPart = parts[1] || '';
 
-    // limit decimals to 2 while typing
     decPart = decPart.slice(0, 2);
 
-    // commas in integer part
-    // if user starts with ".5", keep it as "0.5" for clarity
     if (intPart === '' && s.startsWith('.')) intPart = '0';
-
-    // remove leading zeros like "00012" -> "12", but keep single "0"
     intPart = intPart.replace(/^0+(?=\d)/, '');
 
     const intWithCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
     const out = (parts.length > 1) ? `${intWithCommas}.${decPart}` : intWithCommas;
     return (neg ? '-' : '') + out;
   }
 
   function countCleanChars(str){
-    // count digits and dot and minus at start
     return String(str).replace(/[^0-9.-]/g,'').length;
   }
 
@@ -519,7 +527,6 @@
     if (!Array.isArray(records)) records = [];
     records.sort((a,b) => parseInt(a.serialNumber) - parseInt(b.serialNumber));
 
-    // One-time repair: normalize old "$,comma" strings and recompute balances
     try{
       const repairedAlready = STORAGE_OK ? (localStorage.getItem(REPAIR_KEY) === '1') : false;
       if (!repairedAlready && records.length > 0){
@@ -533,7 +540,6 @@
 
   function saveRecords(records){
     records.sort((a,b) => parseInt(a.serialNumber) - parseInt(b.serialNumber));
-
     if (STORAGE_OK){
       try{
         localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
@@ -551,7 +557,6 @@
     }
   }
 
-  // ===== Fix: Money Out correctly deducts balance; store RAW numeric strings =====
   function recalculateBalances(records, startIndex = 0){
     if (!Array.isArray(records) || records.length === 0) return [];
 
@@ -582,13 +587,12 @@
     document.getElementById('reimbursement').disabled = !moneyOutAndReimbursementEnabled;
   }
 
-  // On typing: apply commas + enforce the old mutual exclusivity rules
   function handleMoneyTyping(changedField){
     const moneyIn = document.getElementById('moneyIn');
     const moneyOut = document.getElementById('moneyOut');
     const reimbursement = document.getElementById('reimbursement');
 
-    if (changedField === 'in') {
+    if (changedField === 'in'){
       applyCommaFormatting(moneyIn);
       const inVal = parseMoney(moneyIn.value);
 
@@ -596,7 +600,7 @@
         moneyOut.value = '';
         reimbursement.value = '';
         setMoneyFieldsState(true, false);
-      } else {
+      }else{
         setMoneyFieldsState(true, true);
       }
     } else {
@@ -606,7 +610,7 @@
       if (moneyOut.value.trim() !== '' && outVal !== 0){
         moneyIn.value = '';
         setMoneyFieldsState(false, true);
-      } else {
+      }else{
         setMoneyFieldsState(true, true);
       }
     }
@@ -686,7 +690,7 @@
       return;
     }
 
-    // NEW RULE: If Money Out is entered, Reimbursement must be selected
+    // Rule: if Money Out is entered, Reimbursement must be selected
     if (moneyOutValue > 0 && !reimbursementValue){
       alert("For 'Money Out', please select a 'Reimbursement' person/type before saving.");
       return;
@@ -727,7 +731,6 @@
     }
 
     recalculateBalances(records, startingRecalcIndex);
-
     clearForm();
     updateUI();
   }
@@ -766,7 +769,6 @@
     alert(`Record S/N ${r.serialNumber} loaded for Amendment.`);
   }
 
-  // CSV export: export RAW numbers (no $ commas)
   function exportToExcel(){
     const records = getRecords();
     if (records.length === 0){
@@ -804,7 +806,6 @@
     alert("Data exported successfully! Check your downloads / Files app.");
   }
 
-  // Backup & Restore (save JSON to Files / Google Drive)
   function backupJSON(){
     const records = getRecords();
     const payload = { app:"Mai Po Cashbook", exportedAt:new Date().toISOString(), records };
