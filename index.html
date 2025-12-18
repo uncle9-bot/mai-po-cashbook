@@ -101,6 +101,7 @@
 /* Reimbursement takes remaining width */
 .reimbursement-col{
   flex:1 1 auto;
+  min-width:0; 
   display:flex;
   flex-direction:column;
 }
@@ -354,31 +355,30 @@
                autocomplete="off" autocapitalize="off"
                oninput="handleMoneyTyping('in')" onblur="normalizeMoneyOnBlur('in')">
       </div>
-<!-- Money Out: fixed 130px -->
-<div class="form-row">
+      
+<div class="form-row form-row-horizontal">
   <div class="form-col money-out-col">
     <label for="moneyOut">Money Out:</label>
     <input type="text" id="moneyOut" name="moneyOut" inputmode="decimal" placeholder="0.00"
            autocomplete="off" autocapitalize="off"
            oninput="handleMoneyTyping('out')" onblur="normalizeMoneyOnBlur('out')">
   </div>
-</div>
 
-<!-- Reimbursement: full width, next row -->
-<div class="form-row">
-  <label for="reimbursement">Reimbursement (Person/Type):</label>
-  <select id="reimbursement" name="reimbursement">
-    <option value="">N/A</option>
-    <option value="Josephine">👩🏻 Josephine</option>
-    <option value="Edward">👱🏼‍♂️ Edward</option>
-    <option value="Kathy">👩🏻 Kathy</option>
-    <option value="Sylvia">👩🏻 Sylvia</option>
-    <option value="Kelvin">👤 Kelvin</option>
-    <option value="Thomas">👤 Thomas</option>
-    <option value="Charles">👤 Charles</option>
-    <option value="Matthew">👤 Matthew</option>
-    <option value="Time Deposit">⏳ Time Deposit</option>
-  </select>
+  <div class="form-col reimbursement-col">
+    <label for="reimbursement">Reimbursement (Person/Type):</label>
+    <select id="reimbursement" name="reimbursement">
+      <option value="">N/A</option>
+      <option value="Josephine">👩🏻 Josephine</option>
+      <option value="Edward">👱🏼‍♂️ Edward</option>
+      <option value="Kathy">👩🏻 Kathy</option>
+      <option value="Sylvia">👩🏻 Sylvia</option>
+      <option value="Kelvin">👤 Kelvin</option>
+      <option value="Thomas">👤 Thomas</option>
+      <option value="Charles">👤 Charles</option>
+      <option value="Matthew">👤 Matthew</option>
+      <option value="Time Deposit">⏳ Time Deposit</option>
+    </select>
+  </div>
 </div>
      
       <div class="form-row">
@@ -904,6 +904,7 @@
 </script>
 </body>
 </html>
+
 
 
 
